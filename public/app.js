@@ -11,6 +11,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const usefulCmds = document.getElementById('useful-cmds');
     const terminalInput = document.getElementById('terminal-input');
     const sendExprBtn = document.getElementById('send-expr-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const installBtn = document.getElementById('install-btn');
+
+    let deferredPrompt;
+
+    // Lógica de Instalação PWA
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.classList.remove('hidden');
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            installBtn.classList.add('hidden');
+        }
+        deferredPrompt = null;
+    });
+
+    // Exportar Código (.hs)
+    downloadBtn.addEventListener('click', () => {
+        const code = codeEditor.value;
+        const blob = new Blob([code], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'exercicio.hs';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        appendOutput('Código exportado como exercicio.hs', 'info');
+    });
 
     // Execução de Expressão (REPL)
     terminalInput.addEventListener('keydown', (e) => {
