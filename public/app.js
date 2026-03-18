@@ -101,14 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
         lineNumbers.scrollTop = codeEditor.scrollTop;
     });
 
-    // Handle tab key in textarea
+    // Handle tab key in textarea (Preserves Undo History)
     codeEditor.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             e.preventDefault();
-            const start = codeEditor.selectionStart;
-            const end = codeEditor.selectionEnd;
-            codeEditor.value = codeEditor.value.substring(0, start) + '    ' + codeEditor.value.substring(end);
-            codeEditor.selectionStart = codeEditor.selectionEnd = start + 4;
+            // Use execCommand to keep Undo/Redo history (Ctrl+Z)
+            document.execCommand('insertText', false, '    ');
             updateLineNumbers();
         }
     });
@@ -165,17 +163,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function appendOutput(text, type) {
         const div = document.createElement('div');
-        div.style.marginTop = '8px';
-        div.style.paddingTop = '8px';
-        div.style.borderTop = '1px dashed #2a2a35';
         
-        let colorClass = '';
+        let colorClass = 'text-slate-300';
         if (type === 'error') colorClass = 'error-text';
         if (type === 'success') colorClass = 'success-text';
+        if (type === 'info') colorClass = 'info-text';
+        if (type === 'repl') colorClass = 'repl-input-line';
 
-        div.className = colorClass;
+        div.className = `terminal-text ${colorClass} whitespace-pre-wrap break-all`;
         div.textContent = text;
         
         terminalOutput.appendChild(div);
+        
+        // Auto scroll to bottom
+        const terminalOutputArea = document.getElementById('terminal-output');
+        terminalOutputArea.scrollTop = terminalOutputArea.scrollHeight;
     }
 });

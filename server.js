@@ -45,7 +45,7 @@ app.post('/api/run', (req, res) => {
             return res.status(500).json({ success: false, output: 'Erro no servidor: falha ao criar arquivo.' });
         }
 
-        exec(`ghci -ignore-dot-ghci < "${filepath}"`, { timeout: 15000 }, (execErr, stdout, stderr) => {
+        exec(`ghci -v0 -ignore-dot-ghci < "${filepath}"`, { timeout: 15000 }, (execErr, stdout, stderr) => {
             fs.unlink(filepath, () => {});
 
             if (execErr && execErr.killed) {
@@ -58,13 +58,11 @@ app.post('/api/run', (req, res) => {
             let output = stdout || stderr || '';
             let cleanOutput = output;
             
-            // Cleanup GHCi noise
+            // Cleanup GHCi noise more aggressively
             cleanOutput = cleanOutput.replace(/GHCi, version.*?(?:\n|\r\n)/g, '');
-            cleanOutput = cleanOutput.replace(/ghci> /g, '');
             cleanOutput = cleanOutput.replace(/Leaving GHCi\./g, '');
+            cleanOutput = cleanOutput.replace(/^.*?>\s?/gm, ''); // Removes 'Prelude> ', 'ghci> ', etc. at the start of any line
             
-            // If we ran an expression, GHCi usually echoes the input code in stdout if it was large
-            // or just outputs the result. We want the last lines mostly.
             cleanOutput = cleanOutput.trim();
 
             return res.status(200).json({
