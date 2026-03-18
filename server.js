@@ -6,8 +6,18 @@ const { exec } = require('child_process');
 const crypto = require('crypto');
 
 const app = express();
+const rateLimit = require('express-rate-limit');
+
+// Rate limiting to prevent abuse
+const limiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 10, // Limit each IP to 10 requests per windowMs
+    message: { success: false, output: '⚠️ Muitas requisições. Por favor, aguarde um minuto.' }
+});
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '500kb' })); // Limit body size to 500KB
+app.use('/api/', limiter); // Apply rate limit to all API routes
 
 // Serve the PWA from 'public' folder
 app.use(express.static(path.join(__dirname, 'public'))); 
@@ -22,6 +32,28 @@ app.post('/api/run', (req, res) => {
     const { code, expression } = req.body;
     if (!code && !expression) {
         return res.status(400).json({ success: false, output: 'Erro: Nenhum código ou expressão fornecida.' });
+    }
+
+    // Security Check: Block dangerous modules/functions
+    const forbiddenPatterns = [
+        'System.Process', 
+        'System.IO.Unsafe', 
+        'System.Directory', 
+        'System.Posix', 
+        'Network.Socket',
+        'GHC.IO.Handle',
+        'foreign import',
+        'unsafePerformIO'
+    ];
+
+    const fullCode = `${code} ${expression}`;
+    for (const pattern of forbiddenPatterns) {
+        if (fullCode.includes(pattern)) {
+            return res.status(403).json({ 
+                success: false, 
+                output: `❌ Acesso Negado: O uso do módulo ou função '${pattern}' não é permitido por razões de segurança.` 
+            });
+        }
     }
 
     const { exec } = require('child_process');
