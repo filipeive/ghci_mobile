@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0d0f1a">
+    <title>GHCi Mobile</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for better aesthetics -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Ionicons for beautiful icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="glass-header">
+            <div class="logo">
+                <ion-icon name="terminal-outline"></ion-icon>
+                <h1>GHCi Mobile</h1>
+            </div>
+            
+            <div class="header-actions">
+                <select id="useful-cmds" class="cmd-select">
+                    <option value="">Comandos</option>
+                    <option value=":help">:help (Ajuda)</option>
+                    <option value=":info ">:info (Info)</option>
+                    <option value=":type ">:type (Tipo)</option>
+                    <option value=":browse ">:browse (Módulo)</option>
+                    <option value=":quit">:quit (Sair)</option>
+                </select>
+
+                <input type="file" id="file-upload" accept=".hs,.txt" style="display: none;">
+                <button id="upload-btn" class="icon-btn tool-btn" title="Carregar Arquivo">
+                    <ion-icon name="folder-open-outline"></ion-icon>
+                </button>
+
+                <button id="run-btn" class="primary-btn">
+                    <ion-icon name="play"></ion-icon>
+                    <span>Rodar</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="editor-area">
+            <div class="code-container">
+                <div class="line-numbers" id="line-numbers">1</div>
+                <textarea id="code-editor" spellcheck="false" placeholder="main = print &#34;Olá GHCi!&#34;"></textarea>
+            </div>
+        </main>
+
+        <div class="terminal-panel" id="terminal-panel">
+            <div class="terminal-header">
+                <h3><ion-icon name="code-slash-outline"></ion-icon> Output</h3>
+                <button id="clear-btn" class="icon-btn"><ion-icon name="trash-outline"></ion-icon></button>
+            </div>
+            <div class="terminal-body" id="terminal-output">
+                <span class="welcome-msg">Pronto. Digite seu código Haskell e toque em Rodar.</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+    <script>
+        // Simple Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('ServiceWorker registado com sucesso.', reg.scope);
+                }).catch(err => {
+                    console.log('Falha no registo do ServiceWorker: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
