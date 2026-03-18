@@ -9,6 +9,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadBtn = document.getElementById('upload-btn');
     const fileUpload = document.getElementById('file-upload');
     const usefulCmds = document.getElementById('useful-cmds');
+    const terminalInput = document.getElementById('terminal-input');
+    const sendExprBtn = document.getElementById('send-expr-btn');
+
+    // Execução de Expressão (REPL)
+    terminalInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            processExpression();
+        }
+    });
+
+    sendExprBtn.addEventListener('click', () => {
+        processExpression();
+    });
+
+    async function processExpression() {
+        const expr = terminalInput.value.trim();
+        if (!expr) return;
+
+        const code = codeEditor.value.trim();
+        terminalInput.value = '';
+        
+        appendOutput(`ghci> ${expr}`, 'info');
+        
+        try {
+            const response = await fetch('/api/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, expression: expr })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                appendOutput(data.output, 'success');
+            } else {
+                appendOutput(data.output, 'error');
+            }
+        } catch (error) {
+            appendOutput('Erro de conexão.', 'error');
+        } finally {
+            const terminalBody = document.querySelector('.terminal-body');
+            terminalBody.scrollTop = terminalBody.scrollHeight;
+        }
+    }
 
     // Carregar Arquivo
     uploadBtn.addEventListener('click', () => {

@@ -57,7 +57,12 @@
                 <button id="clear-btn" class="icon-btn"><ion-icon name="trash-outline"></ion-icon></button>
             </div>
             <div class="terminal-body" id="terminal-output">
-                <span class="welcome-msg">Pronto. Digite seu código Haskell e toque em Rodar.</span>
+                <span class="welcome-msg">Pronto. Digite seu código Haskell e toque em Rodar, ou use o prompt abaixo para testar funções específicas.</span>
+            </div>
+            <div class="terminal-prompt-area">
+                <span class="ghci-label">ghci&gt;</span>
+                <input type="text" id="terminal-input" placeholder="Chame uma função ou digite uma expressão..." autocomplete="off" spellcheck="false">
+                <button id="send-expr-btn" class="icon-btn"><ion-icon name="return-down-back-outline"></ion-icon></button>
             </div>
         </div>
     </div>

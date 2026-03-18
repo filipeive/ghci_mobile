@@ -1,0 +1,152 @@
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name 146.235.224.99;
+    root /var/www/html/portfolio-admin/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location /phpmyadmin {
+        root /usr/share;
+        index index.php index.html index.htm;
+        location ~ ^/phpmyadmin/(.+\.php)$ {
+            try_files $uri =404;
+            root /usr/share;
+            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $request_filename;
+            include fastcgi_params;
+        }
+        location ~* ^/phpmyadmin/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
+            root /usr/share;
+        }
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    # === LARAVEL: EDIFICAR ===
+    location /edificar {
+        alias /var/www/html/edificar/public;
+        index index.php;
+        try_files $uri $uri/ @edificar;
+
+        location ~ \.php$ {
+            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+            fastcgi_param SCRIPT_FILENAME /var/www/html/edificar/public/index.php;
+            fastcgi_param SCRIPT_NAME /edificar/index.php;
+            include fastcgi_params;
+        }
+    }
+    location @edificar {
+        rewrite ^/edificar/(.*)$ /edificar/index.php?/$1 last;
+    }
+
+    # === LARAVEL: TUDOK ===
+    location /tudok {
+        root /var/www/html;
+        index index.php;
+        try_files $uri $uri/ /tudok/index.php?$query_string;
+
+        location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+            fastcgi_param SCRIPT_FILENAME $request_filename;
+            include fastcgi_params;
+        }
+    }
+
+    # === LARAVEL: ZALALA BEACH BAR ===
+    location /zalala-beach-bar {
+        alias /var/www/html/zalala_beach_bar/public;
+        index index.php;
+        try_files $uri $uri/ @zalalabeachbar;
+
+        location ~ \.php$ {
+            include snippets/fastcgi-php.conf;
+            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+            fastcgi_param SCRIPT_FILENAME /var/www/html/zalala_beach_bar/public/index.php;
+            include fastcgi_params;
+        }
+    }
+    location @zalalabeachbar {
+        rewrite /zalala-beach-bar/(.*)$ /zalala-beach-bar/index.php?/$1 last;
+    }
+
+    # === LARAVEL: REPROSYS ===
+    location /reprosys {
+        alias /var/www/html/reprosys/public;
+        index index.php;
+        try_files $uri $uri/ @reprosys;
+
+        location ~ \.php$ {
+            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+            fastcgi_param SCRIPT_FILENAME /var/www/html/reprosys/public/index.php;
+            fastcgi_param SCRIPT_NAME /reprosys/index.php;
+            include fastcgi_params;
+        }
+    }
+    location @reprosys {
+        rewrite ^/reprosys/(.*)$ /reprosys/index.php?/$1 last;
+    }
+
+    # === LARAVEL: MATERNIDADE PLUS ===
+    location /maternidade_plus {
+        alias /var/www/html/maternidade_plus/public;
+        index index.php;
+        try_files $uri $uri/ @maternidade_plus;
+
+        location ~ \.php$ {
+            fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+            fastcgi_param SCRIPT_FILENAME /var/www/html/maternidade_plus/public/index.php;
+            fastcgi_param SCRIPT_NAME /maternidade_plus/index.php;
+            include fastcgi_params;
+        }
+    }
+    location @maternidade_plus {
+        rewrite ^/maternidade_plus/(.*)$ /maternidade_plus/index.php?/$1 last;
+    }
+
+    # === STATIC: 30 SEGUNDOS PWA ===
+    location /30segundos {
+        alias /var/www/html/30segundos;
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
+    # === NODE/STATIC: GHCI MOBILE PWA ===
+    location /ghci_mobile {
+        alias /var/www/html/ghci_mobile/public;
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
+    location /api/run {
+        proxy_pass http://localhost:3000/api/run;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}

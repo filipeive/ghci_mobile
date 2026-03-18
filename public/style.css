@@ -233,6 +233,38 @@ body {
     word-break: break-all;
 }
 
+.terminal-prompt-area {
+    background: #1a1b26;
+    border-top: 1px solid #2a2a35;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ghci-label {
+    color: var(--primary-hover);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.9rem;
+    user-select: none;
+}
+
+#terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #e2e8f0;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+}
+
+#terminal-input::placeholder {
+    color: rgba(255, 255, 255, 0.15);
+    font-style: italic;
+}
+
 .welcome-msg {
     color: #565f89;
     font-style: italic;
