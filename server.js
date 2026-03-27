@@ -8,11 +8,13 @@ const crypto = require('crypto');
 const app = express();
 const rateLimit = require('express-rate-limit');
 
-// Rate limiting to prevent abuse
+// Rate limiting to prevent abuse (classroom-friendly: 60 req/min per IP)
 const limiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
-    max: 10, // Limit each IP to 10 requests per windowMs
-    message: { success: false, output: '⚠️ Muitas requisições. Por favor, aguarde um minuto.' }
+    max: 60, // Limit each IP to 60 requests per minute (1 per second avg)
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, output: '⚠️ Muitas requisições. Por favor, aguarde um momento antes de tentar novamente.' }
 });
 
 app.use(cors());
@@ -20,7 +22,7 @@ app.use(express.json({ limit: '500kb' })); // Limit body size to 500KB
 app.use('/api/', limiter); // Apply rate limit to all API routes
 
 // Serve the PWA from 'public' folder
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Ensure temp directory exists
 const tempDir = path.join(__dirname, 'temp');
@@ -36,10 +38,10 @@ app.post('/api/run', (req, res) => {
 
     // Security Check: Block dangerous modules/functions
     const forbiddenPatterns = [
-        'System.Process', 
-        'System.IO.Unsafe', 
-        'System.Directory', 
-        'System.Posix', 
+        'System.Process',
+        'System.IO.Unsafe',
+        'System.Directory',
+        'System.Posix',
         'Network.Socket',
         'GHC.IO.Handle',
         'foreign import',
@@ -49,9 +51,9 @@ app.post('/api/run', (req, res) => {
     const fullCode = `${code} ${expression}`;
     for (const pattern of forbiddenPatterns) {
         if (fullCode.includes(pattern)) {
-            return res.status(403).json({ 
-                success: false, 
-                output: `❌ Acesso Negado: O uso do módulo ou função '${pattern}' não é permitido por razões de segurança.` 
+            return res.status(403).json({
+                success: false,
+                output: `❌ Acesso Negado: O uso do módulo ou função '${pattern}' não é permitido por razões de segurança.`
             });
         }
     }
@@ -60,7 +62,7 @@ app.post('/api/run', (req, res) => {
     const crypto = require('crypto');
     const fs = require('fs');
     const path = require('path');
-    
+
     const tempDir = path.join(__dirname, 'temp');
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir);
@@ -78,23 +80,23 @@ app.post('/api/run', (req, res) => {
         }
 
         exec(`ghci -v0 -ignore-dot-ghci < "${filepath}"`, { timeout: 15000 }, (execErr, stdout, stderr) => {
-            fs.unlink(filepath, () => {});
+            fs.unlink(filepath, () => { });
 
             if (execErr && execErr.killed) {
-                return res.status(200).json({ 
-                    success: false, 
-                    output: '⚠️ Erro: Tempo Limite Excedido (15 Segundos).\nO código demorou muito para responder. Cuidado com possíveis loops infinitos.' 
+                return res.status(200).json({
+                    success: false,
+                    output: '⚠️ Erro: Tempo Limite Excedido (15 Segundos).\nO código demorou muito para responder. Cuidado com possíveis loops infinitos.'
                 });
             }
 
             let output = stdout || stderr || '';
             let cleanOutput = output;
-            
+
             // Cleanup GHCi noise more aggressively
             cleanOutput = cleanOutput.replace(/GHCi, version.*?(?:\n|\r\n)/g, '');
             cleanOutput = cleanOutput.replace(/Leaving GHCi\./g, '');
             cleanOutput = cleanOutput.replace(/^.*?>\s?/gm, ''); // Removes 'Prelude> ', 'ghci> ', etc. at the start of any line
-            
+
             cleanOutput = cleanOutput.trim();
 
             return res.status(200).json({
