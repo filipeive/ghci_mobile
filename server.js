@@ -71,37 +71,60 @@ app.post('/api/run', (req, res) => {
     const filename = `script_${crypto.randomBytes(4).toString('hex')}.hs`;
     const filepath = path.join(tempDir, filename);
 
-    // If expression exists, we run context + expression. Otherwise just context.
-    const fullInput = expression ? `${code}\n${expression}\n:quit\n` : `${code}\n:quit\n`;
+    // Write ONLY the code definitions to the .hs file (proper Haskell source)
+    const moduleCode = code || '';
 
-    fs.writeFile(filepath, fullInput, (err) => {
+    fs.writeFile(filepath, moduleCode, (err) => {
         if (err) {
             return res.status(500).json({ success: false, output: 'Erro no servidor: falha ao criar arquivo.' });
         }
 
-        exec(`ghci -v0 -ignore-dot-ghci < "${filepath}"`, { timeout: 15000 }, (execErr, stdout, stderr) => {
-            fs.unlink(filepath, () => { });
+        // Build GHCi stdin commands:
+        // 1. :load the file (parsed as proper Haskell with correct indentation)
+        // 2. Evaluate the expression (if any)
+        // 3. :quit
+        let stdinCommands = `:load ${filepath}\n`;
+        if (expression) {
+            stdinCommands += `${expression}\n`;
+        }
+        stdinCommands += `:quit\n`;
 
-            if (execErr && execErr.killed) {
-                return res.status(200).json({
-                    success: false,
-                    output: '⚠️ Erro: Tempo Limite Excedido (15 Segundos).\nO código demorou muito para responder. Cuidado com possíveis loops infinitos.'
-                });
+        // Write stdin commands to a separate temp file
+        const stdinFile = path.join(tempDir, `stdin_${crypto.randomBytes(4).toString('hex')}.txt`);
+        fs.writeFile(stdinFile, stdinCommands, (err2) => {
+            if (err2) {
+                fs.unlink(filepath, () => {});
+                return res.status(500).json({ success: false, output: 'Erro no servidor.' });
             }
 
-            let output = stdout || stderr || '';
-            let cleanOutput = output;
+            exec(`ghci -v0 -ignore-dot-ghci < "${stdinFile}"`, { timeout: 15000 }, (execErr, stdout, stderr) => {
+                // Cleanup temp files
+                fs.unlink(filepath, () => {});
+                fs.unlink(stdinFile, () => {});
 
-            // Cleanup GHCi noise more aggressively
-            cleanOutput = cleanOutput.replace(/GHCi, version.*?(?:\n|\r\n)/g, '');
-            cleanOutput = cleanOutput.replace(/Leaving GHCi\./g, '');
-            cleanOutput = cleanOutput.replace(/^.*?>\s?/gm, ''); // Removes 'Prelude> ', 'ghci> ', etc. at the start of any line
+                if (execErr && execErr.killed) {
+                    return res.status(200).json({
+                        success: false,
+                        output: '⚠️ Erro: Tempo Limite Excedido (15 Segundos).\nO código demorou muito para responder. Cuidado com possíveis loops infinitos.'
+                    });
+                }
 
-            cleanOutput = cleanOutput.trim();
+                let output = (stdout || '') + (stderr || '');
+                let cleanOutput = output;
 
-            return res.status(200).json({
-                success: !execErr || execErr.code === 0,
-                output: cleanOutput || '(Nenhuma saída gerada)'
+                // Cleanup GHCi noise
+                cleanOutput = cleanOutput.replace(/GHCi, version.*?(?:\n|\r\n)/g, '');
+                cleanOutput = cleanOutput.replace(/Leaving GHCi\./g, '');
+                cleanOutput = cleanOutput.replace(/\[[\d]+ of [\d]+\] Compiling.*?(?:\n|\r\n)/g, ''); // Remove module compilation messages
+                cleanOutput = cleanOutput.replace(/Ok,.*?loaded\..*?(?:\n|\r\n)/g, ''); // Remove "Ok, modules loaded." 
+                cleanOutput = cleanOutput.replace(/^.*?>\s?/gm, ''); // Removes 'Prelude> ', 'ghci> ', '*Main> ' etc.
+
+                cleanOutput = cleanOutput.trim();
+
+                return res.status(200).json({
+                    success: !execErr || execErr.code === 0,
+                    output: cleanOutput || '(Nenhuma saída gerada)'
+                });
             });
         });
     });
