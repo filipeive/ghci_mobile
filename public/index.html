@@ -79,8 +79,10 @@
         body { @apply bg-dark-900 text-slate-200 antialiased overflow-hidden; height: 100svh; }
         
         #code-editor, #highlighter-overlay {
-            @apply absolute top-0 left-0 w-full h-full font-mono text-[15px] p-4 whitespace-nowrap overflow-auto;
-            line-height: 1.5rem; /* Explicit 24px height per line */
+            @apply absolute top-0 left-0 w-full h-full font-mono whitespace-nowrap overflow-auto;
+            font-size: 15px !important;
+            line-height: 24px !important;
+            padding: 16px !important;
             margin: 0;
             box-sizing: border-box;
         }
@@ -104,8 +106,10 @@
         }
         
         .line-numbers {
-            @apply w-10 text-right pr-3 pt-4 text-slate-700 font-mono text-sm select-none border-r border-white/5 bg-dark-900 overflow-hidden shrink-0;
-            line-height: 1.5rem; /* Explicit match editor height */
+            @apply w-10 text-right pr-3 text-slate-700 font-mono select-none border-r border-white/5 bg-dark-900 overflow-hidden shrink-0;
+            font-size: 15px !important;
+            line-height: 24px !important;
+            padding-top: 16px !important;
         }
 
         /* Prism override for cleaner look */
@@ -138,9 +142,9 @@
                     <option value="">Comandos & Exemplos</option>
                     <option value=":help">:help (Ajuda)</option>
                     <option value=":type ">:type (Ver Tipo)</option>
-                    <option value="-- Exemplo de If-Then-Else&#10;oMaior x y = if x > y then x else y">Haskell: If-Then-Else</option>
-                    <option value="-- Exemplo de Guards (|)&#10;classifica n&#10;  | n >= 14 = &#34;Aprovado&#34;&#10;  | otherwise = &#34;Reprovado&#34;">Haskell: Guards (|)</option>
-                    <option value="-- Exemplo de Where&#10;somaQuadrados x y = x2 + y2&#10;  where&#10;    x2 = x * x&#10;    y2 = y * y">Haskell: Where</option>
+                    <option value="-- Exemplo: If-Then-Else&#10;oMaior x y = &#10;  if x > y then x else y">Haskell: If-Then-Else</option>
+                    <option value="-- Exemplo: Guards (|)&#10;classifica n&#10;  | n >= 14 = &#34;Aprovado&#34;&#10;  | otherwise = &#34;Reprovado&#34;">Haskell: Guards (|)</option>
+                    <option value="-- Exemplo: Where&#10;somaQuad x y = x2 + y2&#10;  where&#10;    x2 = x * x&#10;    y2 = y * y">Haskell: Where</option>
                     <option value=":quit">:quit (Sair)</option>
                 </select>
                 <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
@@ -178,7 +182,7 @@
     <main class="flex-1 flex flex-col min-h-0 relative">
         <!-- Editor Section -->
         <section class="flex-1 min-h-0 flex bg-dark-900 overflow-hidden">
-            <div id="line-numbers" class="line-numbers shrink-0 overflow-hidden">1</div>
+            <div id="line-numbers" class="line-numbers overflow-hidden">1</div>
             <div class="flex-1 relative overflow-hidden bg-dark-900">
                 <pre id="highlighter-overlay" aria-hidden="true"><code class="language-haskell" id="highlight-content"></code></pre>
                 <textarea id="code-editor" spellcheck="false" placeholder="main = print &#34;Olá GHCi Mobile!&#34;"></textarea>
