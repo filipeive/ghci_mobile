@@ -182,8 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         runBtn.classList.add('loading');
-        runBtn.querySelector('span').innerText = 'Rodando...';
-        appendOutput('Compilando e executando...', 'info');
+        runBtn.querySelector('span').innerText = 'Processando...';
+        appendOutput('Lendo e compilando código...', 'info');
 
         try {
             // Using absolute or relative path that points to self API
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appendOutput('Erro de conexão. Servidor está offline?', 'error');
         } finally {
             runBtn.classList.remove('loading');
-            runBtn.querySelector('span').innerText = 'Rodar';
+            runBtn.querySelector('span').innerText = 'Rodar / Carregar';
             // Scroll to bottom of terminal
             const terminalBody = document.querySelector('.terminal-body');
             terminalBody.scrollTop = terminalBody.scrollHeight;

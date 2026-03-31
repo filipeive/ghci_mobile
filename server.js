@@ -81,11 +81,18 @@ app.post('/api/run', (req, res) => {
 
         // Build GHCi stdin commands:
         // 1. :load the file (parsed as proper Haskell with correct indentation)
-        // 2. Evaluate the expression (if any)
+        // 2. Evaluate 'main' if it exists and no expression was provided, or evaluate the provided expression
         // 3. :quit
         let stdinCommands = `:load ${filepath}\n`;
-        if (expression) {
-            stdinCommands += `${expression}\n`;
+        
+        let finalExpression = expression;
+        // If no expression provided (e.g., clicked "Rodar"), check if there is a 'main' function to run
+        if (!finalExpression && code && /(^|\n)main\s*=/.test(code)) {
+            finalExpression = 'main';
+        }
+
+        if (finalExpression) {
+            stdinCommands += `${finalExpression}\n`;
         }
         stdinCommands += `:quit\n`;
 
@@ -123,9 +130,11 @@ app.post('/api/run', (req, res) => {
 
                 cleanOutput = cleanOutput.trim();
 
+                let defaultOutput = expression ? '(Nenhuma saída gerada)' : '✅ Módulos carregados com sucesso. Pronto para testar no terminal abaixo.';
+                
                 return res.status(200).json({
                     success: !execErr || execErr.code === 0,
-                    output: cleanOutput || '(Nenhuma saída gerada)'
+                    output: cleanOutput || defaultOutput
                 });
             });
         });
