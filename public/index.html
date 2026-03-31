@@ -88,12 +88,13 @@
         <div class="flex items-center gap-2">
             <div class="relative group">
                 <select id="useful-cmds" class="bg-dark-800/50 border border-white/10 rounded-xl px-3 py-1.5 text-sm outline-none focus:border-primary-500/50 transition-all appearance-none pr-8 cursor-pointer">
-                    <option value="">Comandos</option>
-                    <option value=":help">:help</option>
-                    <option value=":info ">:info</option>
-                    <option value=":type ">:type</option>
-                    <option value=":browse ">:browse</option>
-                    <option value=":quit">:quit</option>
+                    <option value="">Comandos & Exemplos</option>
+                    <option value=":help">:help (Ajuda)</option>
+                    <option value=":type ">:type (Ver Tipo)</option>
+                    <option value="-- Template: If-Then-Else\nfuncao x y = if x > y then x else y">Exemplo: If-Then-Else</option>
+                    <option value="-- Template: Guards\nfuncao x\n  | x > 0 = &#34;Positivo&#34;\n  | x < 0 = &#34;Negativo&#34;\n  | otherwise = &#34;Zero&#34;">Exemplo: Guards (|)</option>
+                    <option value="-- Template: Where\nsomaQuadrado x y = x2 + y2\n  where\n    x2 = x*x\n    y2 = y*y">Exemplo: Where</option>
+                    <option value=":quit">:quit (Sair)</option>
                 </select>
                 <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
                     <ion-icon name="chevron-down-outline"></ion-icon>
@@ -101,6 +102,11 @@
             </div>
 
             <input type="file" id="file-upload" accept=".hs,.txt" class="hidden">
+            
+            <button id="new-btn" class="btn-icon" title="Novo Arquivo (Limpar Tudo)">
+                <ion-icon name="document-outline" class="text-xl"></ion-icon>
+            </button>
+
             <button id="upload-btn" class="btn-icon" title="Abrir Arquivo">
                 <ion-icon name="folder-open-outline" class="text-xl"></ion-icon>
             </button>
@@ -136,6 +142,9 @@
                 <div class="flex items-center gap-2 text-slate-400 font-semibold text-xs uppercase tracking-widest">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     Terminal Output
+                </div>
+                <div class="hidden md:flex items-center gap-4 text-[10px] text-slate-500 font-mono">
+                    <span class="bg-white/5 px-2 py-0.5 rounded border border-white/5">Haskell: True, False (Case-sensitive)</span>
                 </div>
                 <button id="clear-btn" class="btn-icon">
                     <ion-icon name="trash-outline"></ion-icon>

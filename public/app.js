@@ -89,6 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const newBtn = document.getElementById('new-btn');
+
+    // Novo Arquivo (Limpar)
+    newBtn.addEventListener('click', () => {
+        if (confirm('Limpar todo o código do editor?')) {
+            codeEditor.value = '';
+            updateLineNumbers();
+            appendOutput('Editor limpo. Pronto para um novo exercício.', 'info');
+        }
+    });
+
     // Carregar Arquivo
     uploadBtn.addEventListener('click', () => {
         fileUpload.click();
@@ -110,11 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fileUpload.value = '';
     });
 
-    // Comandos Úteis
+    // Comandos Úteis e Templates
     usefulCmds.addEventListener('change', (e) => {
-        const cmd = e.target.value;
+        let cmd = e.target.value;
         if (!cmd) return;
         
+        // Unescape newlines and quotes from template string
+        cmd = cmd.replace(/\\n/g, '\n').replace(/&#34;/g, '"');
+
         // Insert cmd at cursor or append
         const start = codeEditor.selectionStart;
         const end = codeEditor.selectionEnd;

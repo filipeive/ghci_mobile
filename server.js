@@ -93,14 +93,14 @@ app.post('/api/run', (req, res) => {
         const stdinFile = path.join(tempDir, `stdin_${crypto.randomBytes(4).toString('hex')}.txt`);
         fs.writeFile(stdinFile, stdinCommands, (err2) => {
             if (err2) {
-                fs.unlink(filepath, () => {});
+                fs.unlink(filepath, () => { });
                 return res.status(500).json({ success: false, output: 'Erro no servidor.' });
             }
 
             exec(`ghci -v0 -ignore-dot-ghci < "${stdinFile}"`, { timeout: 15000 }, (execErr, stdout, stderr) => {
                 // Cleanup temp files
-                fs.unlink(filepath, () => {});
-                fs.unlink(stdinFile, () => {});
+                fs.unlink(filepath, () => { });
+                fs.unlink(stdinFile, () => { });
 
                 if (execErr && execErr.killed) {
                     return res.status(200).json({
@@ -117,7 +117,9 @@ app.post('/api/run', (req, res) => {
                 cleanOutput = cleanOutput.replace(/Leaving GHCi\./g, '');
                 cleanOutput = cleanOutput.replace(/\[[\d]+ of [\d]+\] Compiling.*?(?:\n|\r\n)/g, ''); // Remove module compilation messages
                 cleanOutput = cleanOutput.replace(/Ok,.*?loaded\..*?(?:\n|\r\n)/g, ''); // Remove "Ok, modules loaded." 
-                cleanOutput = cleanOutput.replace(/^.*?>\s?/gm, ''); // Removes 'Prelude> ', 'ghci> ', '*Main> ' etc.
+                
+                // Specific Prompt Cleaning (Only at line start to avoid mangling expressions like x > y)
+                cleanOutput = cleanOutput.replace(/^(\*?Main|Prelude|ghci|it)>\s?/gm, ''); 
 
                 cleanOutput = cleanOutput.trim();
 
