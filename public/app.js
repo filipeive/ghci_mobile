@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cmd) return;
         
         // Unescape newlines and quotes from template string
-        cmd = cmd.replace(/\\n/g, '\n').replace(/&#34;/g, '"');
+        cmd = cmd.split('\\n').join('\n').split('&#34;').join('"');
 
         // Insert cmd at cursor or append
         const start = codeEditor.selectionStart;
