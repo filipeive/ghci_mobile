@@ -1,9 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const codeEditor = document.getElementById('code-editor');
+    const highlighterOverlay = document.getElementById('highlighter-overlay');
+    const highlightContent = document.getElementById('highlight-content');
     const lineNumbers = document.getElementById('line-numbers');
     const runBtn = document.getElementById('run-btn');
     const terminalOutput = document.getElementById('terminal-output');
     const clearBtn = document.getElementById('clear-btn');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
     
     // Novas funcionalidades
     const uploadBtn = document.getElementById('upload-btn');
@@ -15,6 +20,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const installBtn = document.getElementById('install-btn');
 
     let deferredPrompt;
+
+    // Sistema de Notificação (Toast)
+    function showToast(message, type = 'info') {
+        toastMessage.textContent = message;
+        
+        // Reset styles/icons based on type
+        if (type === 'success') {
+            toastIcon.name = 'checkmark-circle';
+            toastIcon.className = 'text-emerald-500 text-lg';
+        } else if (type === 'error') {
+            toastIcon.name = 'alert-circle';
+            toastIcon.className = 'text-rose-500 text-lg';
+        } else {
+            toastIcon.name = 'information-circle';
+            toastIcon.className = 'text-primary-500 text-lg';
+        }
+
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Sincronização do Highlighter
+    function syncHighlighter() {
+        const content = codeEditor.value;
+        // Escape HTML
+        highlightContent.textContent = content;
+        // Trigger Prism
+        Prism.highlightElement(highlightContent);
+        // Sync scroll
+        highlighterOverlay.scrollTop = codeEditor.scrollTop;
+        highlighterOverlay.scrollLeft = codeEditor.scrollLeft;
+    }
 
     // Lógica de Instalação PWA
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -45,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        appendOutput('Código exportado como exercicio.hs', 'info');
+        showToast('Código exportado com sucesso', 'success');
     });
 
     // Execução de Expressão (REPL)
@@ -84,8 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             appendOutput('Erro de conexão.', 'error');
         } finally {
-            const terminalBody = document.querySelector('.terminal-body');
-            terminalBody.scrollTop = terminalBody.scrollHeight;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
         }
     }
 
@@ -95,8 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
     newBtn.addEventListener('click', () => {
         if (confirm('Limpar todo o código do editor?')) {
             codeEditor.value = '';
+            syncHighlighter();
             updateLineNumbers();
-            appendOutput('Editor limpo. Pronto para um novo exercício.', 'info');
+            showToast('Editor limpo', 'info');
         }
     });
 
@@ -112,8 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             codeEditor.value = e.target.result;
+            syncHighlighter();
             updateLineNumbers();
-            appendOutput(`Arquivo '${file.name}' carregado com sucesso.`, 'success');
+            showToast('Arquivo carregado', 'success');
         };
         reader.readAsText(file);
         
@@ -126,37 +166,38 @@ document.addEventListener('DOMContentLoaded', () => {
         let cmd = e.target.value;
         if (!cmd) return;
         
-        // Unescape quotes if any (newlines are handled better by HTML entities now)
         cmd = cmd.split('&#34;').join('"');
 
-        // Insert cmd at cursor or append
         const start = codeEditor.selectionStart;
         const end = codeEditor.selectionEnd;
         codeEditor.value = codeEditor.value.substring(0, start) + cmd + codeEditor.value.substring(end);
         codeEditor.selectionStart = codeEditor.selectionEnd = start + cmd.length;
         
         codeEditor.focus();
+        syncHighlighter();
         updateLineNumbers();
         
-        // Reset select
         usefulCmds.value = '';
     });
 
-    // Sync line numbers
+    // Sync editor effects
     codeEditor.addEventListener('input', () => {
+        syncHighlighter();
         updateLineNumbers();
     });
 
     codeEditor.addEventListener('scroll', () => {
+        highlighterOverlay.scrollTop = codeEditor.scrollTop;
+        highlighterOverlay.scrollLeft = codeEditor.scrollLeft;
         lineNumbers.scrollTop = codeEditor.scrollTop;
     });
 
-    // Handle tab key in textarea (Preserves Undo History)
+    // Handle tab key
     codeEditor.addEventListener('keydown', (e) => {
         if (e.key === 'Tab') {
             e.preventDefault();
-            // Use execCommand to keep Undo/Redo history (Ctrl+Z)
             document.execCommand('insertText', false, '    ');
+            syncHighlighter();
             updateLineNumbers();
         }
     });
@@ -171,22 +212,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     clearBtn.addEventListener('click', () => {
-        terminalOutput.innerHTML = '<span class="welcome-msg">Output limpo.</span>';
+        terminalOutput.innerHTML = '<div class="text-slate-500 italic text-xs">Excluído com sucesso. Aguardando novos comandos...</div>';
+        showToast('Saída do terminal limpa', 'info');
     });
 
     runBtn.addEventListener('click', async () => {
         const code = codeEditor.value.trim();
         if (!code) {
-            appendOutput('O editor está vazio. Digite algum código Haskell.', 'error');
+            showToast('O editor está vazio', 'error');
             return;
         }
 
         runBtn.classList.add('loading');
         runBtn.querySelector('span').innerText = 'Processando...';
-        appendOutput('Lendo e compilando código...', 'info');
-
+        
         try {
-            // Using absolute or relative path that points to self API
             const response = await fetch('/api/run', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -196,18 +236,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success) {
-                appendOutput(data.output, 'success');
+                // If it's a success message without real code output, show toast
+                if (data.output.includes('Módulos carregados com sucesso')) {
+                    showToast('Código carregado com sucesso', 'success');
+                } else {
+                    appendOutput(data.output, 'success');
+                }
             } else {
                 appendOutput(data.output, 'error');
             }
         } catch (error) {
-            appendOutput('Erro de conexão. Servidor está offline?', 'error');
+            showToast('Erro de conexão com o servidor', 'error');
         } finally {
             runBtn.classList.remove('loading');
             runBtn.querySelector('span').innerText = 'Rodar / Carregar';
-            // Scroll to bottom of terminal
-            const terminalBody = document.querySelector('.terminal-body');
-            terminalBody.scrollTop = terminalBody.scrollHeight;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
         }
     });
 
@@ -215,18 +258,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         
         let colorClass = 'text-slate-300';
-        if (type === 'error') colorClass = 'error-text';
-        if (type === 'success') colorClass = 'success-text';
-        if (type === 'info') colorClass = 'info-text';
-        if (type === 'repl') colorClass = 'repl-input-line';
+        if (type === 'error') colorClass = 'text-rose-400 font-semibold';
+        if (type === 'success') colorClass = 'text-emerald-400 font-medium';
+        if (type === 'info') colorClass = 'text-primary-400';
 
-        div.className = `terminal-text ${colorClass} whitespace-pre-wrap break-all`;
+        div.className = `terminal-text ${colorClass} whitespace-pre-wrap break-all border-l-2 ${type === 'error' ? 'border-rose-500' : 'border-primary-500'} pl-3 py-1 bg-white/5 rounded-r-lg`;
         div.textContent = text;
         
         terminalOutput.appendChild(div);
-        
-        // Auto scroll to bottom
-        const terminalOutputArea = document.getElementById('terminal-output');
-        terminalOutputArea.scrollTop = terminalOutputArea.scrollHeight;
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
     }
+
+    // Initial sync
+    syncHighlighter();
 });
