@@ -255,6 +255,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function appendOutput(text, type) {
+        const placeholder = document.getElementById('terminal-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+
         const div = document.createElement('div');
         
         let colorClass = 'text-slate-300';
