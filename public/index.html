@@ -79,7 +79,8 @@
         body { @apply bg-dark-900 text-slate-200 antialiased overflow-hidden; height: 100svh; }
         
         #code-editor, #highlighter-overlay {
-            @apply absolute top-0 left-0 w-full h-full font-mono text-[15px] leading-[1.6] p-4 whitespace-pre overflow-hidden;
+            @apply absolute top-0 left-0 w-full h-full font-mono text-[15px] p-4 whitespace-nowrap overflow-auto;
+            line-height: 1.5rem; /* Explicit 24px height per line */
             margin: 0;
             box-sizing: border-box;
         }
@@ -91,15 +92,20 @@
         #highlighter-overlay {
             @apply pointer-events-none z-0;
             background: transparent !important;
+            scrollbar-width: none; /* Hide for overlay */
         }
+
+        #highlighter-overlay::-webkit-scrollbar { display: none; }
 
         #highlighter-overlay code {
             @apply bg-transparent p-0 text-inherit;
             font-family: inherit !important;
+            font-size: inherit !important;
         }
         
         .line-numbers {
-            @apply w-10 text-right pr-3 pt-4 text-slate-700 font-mono text-sm select-none border-r border-white/5 bg-dark-900;
+            @apply w-10 text-right pr-3 pt-4 text-slate-700 font-mono text-sm select-none border-r border-white/5 bg-dark-900 overflow-hidden shrink-0;
+            line-height: 1.5rem; /* Explicit match editor height */
         }
 
         /* Prism override for cleaner look */
@@ -172,15 +178,15 @@
     <main class="flex-1 flex flex-col min-h-0 relative">
         <!-- Editor Section -->
         <section class="flex-1 min-h-0 flex bg-dark-900 overflow-hidden">
-            <div id="line-numbers" class="line-numbers shrink-0">1</div>
-            <div class="flex-1 relative overflow-hidden">
+            <div id="line-numbers" class="line-numbers shrink-0 overflow-hidden">1</div>
+            <div class="flex-1 relative overflow-hidden bg-dark-900">
                 <pre id="highlighter-overlay" aria-hidden="true"><code class="language-haskell" id="highlight-content"></code></pre>
                 <textarea id="code-editor" spellcheck="false" placeholder="main = print &#34;Olá GHCi Mobile!&#34;"></textarea>
             </div>
         </section>
 
         <!-- Terminal Panel -->
-        <div id="terminal-panel" class="h-[60%] flex flex-col glass rounded-t-[2.5rem] shadow-2xl transition-all duration-300 border-t-white/10 z-20">
+        <div id="terminal-panel" class="h-[45%] flex flex-col glass rounded-t-[2.5rem] shadow-2xl transition-all duration-300 border-t-white/10 z-20">
             <!-- Terminal Header -->
             <div class="h-12 shrink-0 flex items-center justify-between px-6 border-b border-white/5">
                 <div class="flex items-center gap-2 text-slate-400 font-semibold text-xs uppercase tracking-widest">

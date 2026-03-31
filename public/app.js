@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         highlightContent.textContent = content;
         // Trigger Prism
         Prism.highlightElement(highlightContent);
-        // Sync scroll
+        // Sync scroll (Vertical e Horizontal)
         highlighterOverlay.scrollTop = codeEditor.scrollTop;
         highlighterOverlay.scrollLeft = codeEditor.scrollLeft;
     }
