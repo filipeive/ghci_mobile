@@ -34,9 +34,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('download-btn');
     const installBtn = document.getElementById('install-btn');
     const newBtn = document.getElementById('new-btn');
+    const searchBtn = document.getElementById('search-btn');
 
     let deferredPrompt;
     let toastTimer = null;
+
+    // ===== SEARCH FUNCTIONALITY =====
+    searchBtn.addEventListener('click', () => {
+        editor.execCommand('find');
+    });
 
     // ===== TOAST NOTIFICATION SYSTEM =====
     function showToast(message, type = 'info') {
