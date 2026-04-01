@@ -20,6 +20,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make editor fill its container
     editor.setSize('100%', '100%');
 
+    // ===== PERSISTENCE =====
+    const savedCode = localStorage.getItem('ghci_mobile_code');
+    if (savedCode) {
+        editor.setValue(savedCode);
+    }
+
+    editor.on('change', (cm) => {
+        localStorage.setItem('ghci_mobile_code', cm.getValue());
+    });
+
     // ===== DOM ELEMENTS =====
     const runBtn = document.getElementById('run-btn');
     const terminalOutput = document.getElementById('terminal-output');
@@ -114,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     newBtn.addEventListener('click', () => {
         if (editor.getValue().trim() && !confirm('Limpar todo o código do editor?')) return;
+        localStorage.removeItem('ghci_mobile_code');
         editor.setValue('');
         showToast('Editor limpo', 'info');
     });

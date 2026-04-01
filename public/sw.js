@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ghci-pwa-cache-v5';
+const CACHE_NAME = 'ghci-pwa-cache-v6';
 const urlsToCache = [
   './',
   './index.html',
