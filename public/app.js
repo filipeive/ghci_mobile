@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         indentUnit: 2,
         tabSize: 2,
         indentWithTabs: false,
-        lineWrapping: false,
+        lineWrapping: true,
         placeholder: 'main = putStrLn "Olá GHCi Mobile!"',
         extraKeys: {
             'Tab': (cm) => cm.replaceSelection('  ', 'end')
