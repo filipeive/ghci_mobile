@@ -31,6 +31,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/scroll/annotatescrollbar.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/search/matchesonscrollbar.min.js"></script>
 
+    <!-- CodeMirror Autocomplete Addon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/show-hint.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/show-hint.min.js"></script>
+
     <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
@@ -375,6 +379,66 @@
             padding-left: 2em !important;
         }
 
+        /* Autocomplete hint styling */
+        .CodeMirror-hints {
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-hover) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+            padding: 4px 0 !important;
+            font-family: var(--font-mono) !important;
+            font-size: 13px !important;
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            z-index: 200 !important;
+        }
+
+        .CodeMirror-hint {
+            color: var(--text-primary) !important;
+            padding: 5px 12px !important;
+            border-radius: 0 !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            white-space: nowrap !important;
+        }
+
+        li.CodeMirror-hint-active {
+            background: rgba(139, 92, 246, 0.2) !important;
+            color: white !important;
+        }
+
+        .hint-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 3px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .hint-badge-keyword {
+            background: rgba(199, 146, 234, 0.2);
+            color: #c792ea;
+        }
+
+        .hint-badge-type {
+            background: rgba(255, 203, 107, 0.2);
+            color: #ffcb6b;
+        }
+
+        .hint-badge-fn {
+            background: rgba(130, 170, 255, 0.2);
+            color: #82aaff;
+        }
+
+        .hint-badge-var {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+
         /* ===== TERMINAL ===== */
         .terminal-panel {
             height: 45%;
@@ -656,7 +720,7 @@
         </div>
     </main>
 
-    <script src="app.js?v=1.3"></script>
+    <script src="app.js?v=1.4"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

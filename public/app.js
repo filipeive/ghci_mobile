@@ -1,4 +1,121 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ===== HASKELL AUTOCOMPLETE DICTIONARY =====
+    const haskellKeywords = [
+        'case', 'class', 'data', 'deriving', 'do', 'else', 'if', 'import',
+        'in', 'infixl', 'infixr', 'instance', 'let', 'module', 'newtype',
+        'of', 'otherwise', 'then', 'type', 'where', 'forall', 'qualified',
+        'as', 'hiding', 'default', 'foreign'
+    ];
+
+    const haskellTypes = [
+        'Int', 'Integer', 'Float', 'Double', 'Char', 'String', 'Bool',
+        'Maybe', 'Just', 'Nothing', 'Either', 'Left', 'Right', 'IO',
+        'True', 'False', 'Ordering', 'EQ', 'LT', 'GT',
+        'Show', 'Read', 'Eq', 'Ord', 'Num', 'Enum', 'Bounded',
+        'Integral', 'Fractional', 'Floating', 'Functor', 'Monad',
+        'Applicative', 'Foldable', 'Traversable'
+    ];
+
+    const haskellFunctions = [
+        // Prelude
+        'abs', 'acos', 'acosh', 'all', 'and', 'any', 'appendFile',
+        'asin', 'asinh', 'atan', 'atanh', 'break', 'ceiling', 'compare',
+        'concat', 'concatMap', 'const', 'cos', 'cosh', 'curry', 'cycle',
+        'div', 'drop', 'dropWhile', 'elem', 'error', 'even', 'exp',
+        'filter', 'flip', 'floor', 'fmap', 'foldl', 'foldl1', 'foldr',
+        'foldr1', 'fromInteger', 'fromIntegral', 'fst', 'gcd', 'getChar',
+        'getLine', 'head', 'id', 'init', 'interact', 'iterate', 'last',
+        'lcm', 'length', 'lines', 'log', 'lookup', 'map', 'mapM', 'mapM_',
+        'max', 'maximum', 'min', 'minimum', 'mod', 'negate', 'not', 'notElem',
+        'null', 'odd', 'or', 'otherwise', 'pi', 'pred', 'print', 'product',
+        'putChar', 'putStr', 'putStrLn', 'quot', 'quotRem', 'read',
+        'readFile', 'readLn', 'rem', 'repeat', 'replicate', 'return',
+        'reverse', 'round', 'scanl', 'scanl1', 'scanr', 'scanr1',
+        'sequence', 'sequence_', 'show', 'signum', 'sin', 'sinh', 'snd',
+        'sort', 'span', 'splitAt', 'sqrt', 'succ', 'sum', 'tail', 'take',
+        'takeWhile', 'tan', 'tanh', 'toInteger', 'truncate', 'uncurry',
+        'undefined', 'unlines', 'until', 'unwords', 'unzip', 'unzip3',
+        'words', 'writeFile', 'zip', 'zip3', 'zipWith', 'zipWith3',
+        // Data.List
+        'group', 'groupBy', 'intercalate', 'intersperse', 'isInfixOf',
+        'isPrefixOf', 'isSuffixOf', 'nub', 'nubBy', 'partition',
+        'permutations', 'sortBy', 'sortOn', 'subsequences', 'transpose',
+        'union', 'intersect',
+        // Data.Maybe
+        'fromJust', 'fromMaybe', 'isJust', 'isNothing', 'maybe',
+        'catMaybes', 'mapMaybe', 'listToMaybe', 'maybeToList'
+    ];
+
+    // Custom hint function
+    function haskellHint(cm) {
+        const cur = cm.getCursor();
+        const token = cm.getTokenAt(cur);
+        let start = token.start;
+        let end = cur.ch;
+        const word = token.string.slice(0, end - start);
+
+        // Don't hint inside strings or comments
+        if (token.type === 'string' || token.type === 'comment') return null;
+
+        // Need at least 2 chars to trigger
+        if (word.length < 2) return null;
+
+        const lower = word.toLowerCase();
+
+        // Collect user-defined identifiers from the document
+        const docText = cm.getValue();
+        const userWords = new Set();
+        const identifierRegex = /\b([a-zA-Z_][a-zA-Z0-9_']*)\b/g;
+        let match;
+        while ((match = identifierRegex.exec(docText)) !== null) {
+            const w = match[1];
+            if (w.length >= 2 && w !== word) userWords.add(w);
+        }
+
+        // Build suggestions with categories
+        const suggestions = [];
+        const seen = new Set();
+
+        function addMatches(list, category, badgeClass) {
+            for (const item of list) {
+                if (seen.has(item)) continue;
+                if (item.toLowerCase().startsWith(lower)) {
+                    seen.add(item);
+                    suggestions.push({
+                        text: item,
+                        displayText: item,
+                        category: category,
+                        badgeClass: badgeClass,
+                        render: function(el, self, data) {
+                            const badge = document.createElement('span');
+                            badge.className = 'hint-badge ' + data.badgeClass;
+                            badge.textContent = data.category;
+                            el.appendChild(badge);
+                            el.appendChild(document.createTextNode(data.displayText));
+                        }
+                    });
+                }
+            }
+        }
+
+        addMatches(haskellKeywords, 'KW', 'hint-badge-keyword');
+        addMatches(haskellTypes, 'TYPE', 'hint-badge-type');
+        addMatches(haskellFunctions, 'FN', 'hint-badge-fn');
+        addMatches([...userWords], 'VAR', 'hint-badge-var');
+
+        if (suggestions.length === 0) return null;
+
+        return {
+            list: suggestions,
+            from: CodeMirror.Pos(cur.line, start),
+            to: CodeMirror.Pos(cur.line, end)
+        };
+    }
+
+    // Register hint helper
+    CodeMirror.registerHelper('hint', 'haskell', haskellHint);
+
     // ===== CODEMIRROR EDITOR =====
     const editor = CodeMirror(document.getElementById('editor-wrapper'), {
         mode: 'haskell',
@@ -12,13 +129,35 @@ document.addEventListener('DOMContentLoaded', () => {
         indentWithTabs: false,
         lineWrapping: true,
         placeholder: 'main = putStrLn "Olá GHCi Mobile!"',
+        hintOptions: {
+            completeSingle: false,
+            alignWithWord: true
+        },
         extraKeys: {
-            'Tab': (cm) => cm.replaceSelection('  ', 'end')
+            'Tab': (cm) => cm.replaceSelection('  ', 'end'),
+            'Ctrl-Space': (cm) => cm.showHint({ hint: haskellHint })
         }
     });
 
     // Make editor fill its container
     editor.setSize('100%', '100%');
+
+    // ===== AUTO-TRIGGER AUTOCOMPLETE (debounced) =====
+    let hintTimeout = null;
+    editor.on('inputRead', (cm, change) => {
+        // Only trigger on character input, not deletions or pastes
+        if (change.origin !== '+input') return;
+        const ch = change.text[0];
+        // Don't trigger on whitespace or special chars
+        if (!ch || /\s/.test(ch)) return;
+
+        if (hintTimeout) clearTimeout(hintTimeout);
+        hintTimeout = setTimeout(() => {
+            // Check if a hint menu is already open
+            if (cm.state.completionActive) return;
+            cm.showHint({ hint: haskellHint, completeSingle: false });
+        }, 300);
+    });
 
     // ===== PERSISTENCE =====
     const savedCode = localStorage.getItem('ghci_mobile_code');
