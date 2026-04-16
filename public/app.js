@@ -135,7 +135,46 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         extraKeys: {
             'Tab': (cm) => cm.replaceSelection('  ', 'end'),
-            'Ctrl-Space': (cm) => cm.showHint({ hint: haskellHint })
+            'Ctrl-Space': (cm) => cm.showHint({ hint: haskellHint }),
+            'Enter': (cm) => {
+                const cur = cm.getCursor();
+                const line = cm.getLine(cur.line);
+                const trimmed = line.trim();
+                const currentIndent = line.match(/^\s*/)[0];
+
+                // 1) Empty line → next line at column 0 (new function definition)
+                if (trimmed === '') {
+                    cm.replaceSelection('\n', 'end');
+                    return;
+                }
+
+                // 2) Line ends with block keywords → indent deeper
+                if (/\b(where|do|let|of)\s*$/.test(trimmed)) {
+                    cm.replaceSelection('\n' + currentIndent + '  ', 'end');
+                    return;
+                }
+
+                // 3) Line ends with = (function definition start) → indent
+                if (/=\s*$/.test(trimmed) && !trimmed.startsWith('|')) {
+                    cm.replaceSelection('\n' + currentIndent + '  ', 'end');
+                    return;
+                }
+
+                // 4) Inside a guard block (line starts with |) → keep same indent for next guard
+                if (trimmed.startsWith('|')) {
+                    cm.replaceSelection('\n' + currentIndent, 'end');
+                    return;
+                }
+
+                // 5) Line is indented (part of a block like where/guards) → keep indent
+                if (currentIndent.length > 0) {
+                    cm.replaceSelection('\n' + currentIndent, 'end');
+                    return;
+                }
+
+                // 6) Default: top-level line → new line at column 0
+                cm.replaceSelection('\n', 'end');
+            }
         }
     });
 
